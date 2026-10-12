@@ -1,13 +1,16 @@
+from typing import Union
+
+
 class DataToWorker:
     def __init__(self, num1: int, num2: int, operation: str):
         self.num1 = num1
         self.num2 = num2
         self.op = operation
-        self.result = 0
+        self.result: Union[int, float] = 0
         self.message = ""
         self.exe = ""
 
-    def set_result(self, res: float):
+    def set_result(self, res: Union[int, float]):
         self.result = res
 
     def set_executor(self, exe: str):

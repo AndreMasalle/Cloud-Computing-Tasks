@@ -1,44 +1,31 @@
-import main_constants as mc
-from data_worker import DataToWorker
 import pickle
 import zmq
 
-### Here's the step by step
-### Create your context 
-### Create a socket using the subscriber socket type
-### Connect the socket to the publisher'socket 
-### Set socket topic
+import main_constants as mc
+from data_worker import DataToWorker
 
-index: int = 0
-###
-####   YOUR CODE
-###
 
-print("Waiting for a new message to arrive... ")
+def run_subscriber():
+    context = zmq.Context()
+    subscriber = context.socket(zmq.SUB)
+    subscriber.setsockopt_string(zmq.SUBSCRIBE, mc.TOPIC_DIV)
+    subscriber.connect(f"tcp://{mc.PUBLISHER_HOST}:{mc.PUBLISHER_PORT}")
+    print(f"[DIV subscriber] Listening for {mc.TOPIC_DIV}", flush=True)
+    try:
+        while True:
+            topic, payload = subscriber.recv_multipart()
+            result: DataToWorker = pickle.loads(payload)
+            print(
+                f"[{topic.decode()} subscriber] {result.num1} / {result.num2} "
+                f"= {result.result}; {result.message}; executor={result.exe}",
+                flush=True,
+            )
+    except KeyboardInterrupt:
+        print("[DIV subscriber] Stopped", flush=True)
+    finally:
+        subscriber.close(linger=0)
+        context.term()
 
-def show_content(result):
-    result_obj: DataToWorker = pickle.loads(...)
-    print(f"Input Numbers: {...} & {...}")
-    print(f"Main Operation: {...}")
-    print(f"Result: {...}")
-    print(f"Message: {...}")
-    print(f"EXECUTOR: {...}")
 
-while True:
-    ### Receive the data in multi part
-    ### Call the show_content
-
-    ###
-    ####   YOUR CODE
-    ###
-    print("Received a new message: with topic's name", str(...))
-    
-    ###
-    ####   YOUR CODE
-    ###
-    index += 1
-    
-    if index >= 5:
-        print("\033c",end="")
-        index = 0
-    print("\nRepeating ...\n")
+if __name__ == "__main__":
+    run_subscriber()
