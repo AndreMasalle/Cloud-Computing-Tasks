@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  # ---------- Task A: Publish-Subscribe ----------
+  publisher-a:
+    build: .
+    command: python TaskA/publisher.py
+
+  sub-a:
+    build: .
+    command: python TaskA/subscriber.py 103012580060
+    depends_on:
+      - publisher-a
+
+  sub-r:
+    build: .
+    command: python TaskA/subscriber.py 103012580057
+    depends_on:
+      - publisher-a
+
+  sub-d:
+    build: .
+    command: python TaskA/subscriber.py 103012580015
+    depends_on:
+      - publisher-a
+
+  sub-v:
+    build: .
+    command: python TaskA/subscriber.py 103012580019
+    depends_on:
+      - publisher-a
+
+  # ---------- Task B: Publish-Subscribe ----------
+
+  # ---------- Task C: Publish-Subscribe ----------
+
+  # ---------- Task D: Publish-Subscribe ----------
