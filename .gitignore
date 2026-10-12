@@ -1,0 +1,9 @@
+# Ignore documentation and walkthrough folders
+walkthrough/
+walktrough/
+**/walkthrough/
+**/walktrough/
+__pycache__/
+**/__pycache__/
+*.pyc
+
