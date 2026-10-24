@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # ---------- Task A: Publish-Subscribe ----------
   publisher-a:
@@ -92,4 +90,10 @@ services:
       - taskc-mut-subscriber
       - taskc-div-subscriber
 
-  # ---------- Task D: Publish-Subscribe ----------
+  # ---------- Task D: Reticulum Announcement ----------
+  taskd:
+    platform: linux/amd64
+    build: .
+    command: python TaskD/reticulum_task_d.py
+    tty: true
+    stdin_open: true
