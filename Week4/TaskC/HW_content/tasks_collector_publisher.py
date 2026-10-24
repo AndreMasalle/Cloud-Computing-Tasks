@@ -2,51 +2,51 @@ import zmq
 import pickle
 from data_worker import DataToWorker
 import main_constants as mc
+import time
 
-### Here's the step by step
-### Create your context 
-### Create 2 sockets using the pull socket type
-### Connect each pull socket variable to the worker's socket end point.
+def topic_for_operation(operation: str) -> str:
+    topics = {
+        mc.SUM: mc.TOPIC_SUM,
+        mc.MUT: mc.TOPIC_MUT,
+        mc.DIV: mc.TOPIC_DIV,
+    }
+    try:
+        return topics[operation]
+    except KeyError as error:
+        raise ValueError(f"Unsupported operation: {operation}") from error
 
-### Create a socket using the pub socket type to publish the message
-### Bind your publisher socket to your desired endpoint.
 
-###
-####   YOUR CODE
-###
+def run_collector_publisher():
+    context = zmq.Context()
+    pull_socket = context.socket(zmq.PULL)
+    pull_socket.connect(f"tcp://{mc.WORKER_1_HOST}:{mc.WORKER_1_PORT}")
+    pull_socket.connect(f"tcp://{mc.WORKER_2_HOST}:{mc.WORKER_2_PORT}")
 
-def set_data_message(data: DataToWorker, message: str):
-    data.set_message(message)
-    return data
+    publisher = context.socket(zmq.PUB)
+    publisher.bind(f"tcp://*:{mc.PUBLISHER_PORT}")
+    print("Tasks collector is receiving results and publishing SUM/MUT/DIV", flush=True)
 
-message_sum: str = "The summation process has been executed sucessfully"
-message_multiply: str = "The multiplication process has been executed sucessfully"
-message_div: str = "The div process has been executed sucessfully"
+    try:
+        while True:
+            result: DataToWorker = pickle.loads(pull_socket.recv())
+            topic = topic_for_operation(result.op)
+            result.set_message(f"{topic} result published by {result.exe}")
+            print(
+                f"[Collector] Received from {result.exe}: {result.num1} "
+                f"{result.op} {result.num2} = {result.result}",
+                flush=True,
+            )
+            publisher.send_multipart([topic.encode("utf-8"), pickle.dumps(result)])
+            print(f"[Collector -> PUB] Published on {topic}", flush=True)
+    except KeyboardInterrupt:
+        print("[Collector] Stopped", flush=True)
+    finally:
+        pull_socket.close(linger=0)
+        publisher.close(linger=0)
+        context.term()
 
-while True:
 
-##  Receive tasks from the workers
-### Loads the data 
-### set the message property appropriately for the given operation 
-### send the multipart data.
-
-###
-####   YOUR CODE
-###
-
-    print("Task is received")
+if __name__ == "__main__":
+    run_collector_publisher()
     
-    result: DataToWorker = pickle.loads(...)
-    if mc.SUM == ...:
-        ...
-    elif mc.MUT == ...:
-        ...
-    elif mc.DIV == ...:
-        ...
-    print("Sending the results to subscribers...")
 
-###
-####   YOUR CODE
-###
-    print("--- Sent ---")
-    

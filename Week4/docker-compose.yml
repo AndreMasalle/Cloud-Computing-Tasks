@@ -30,7 +30,65 @@ services:
 
   # ---------- Task B: Publish-Subscribe ----------
 
-  # ---------- Task C: Publish-Subscribe ----------
+  # ---------- Task C: Push-Pull + Publish-Subscribe ----------
+  taskc-worker-1:
+    build: .
+    command: python TaskC/HW_content/worker_1.py
+    environment:
+      DISTRIBUTOR_HOST: taskc-distributor
+
+  taskc-worker-2:
+    build: .
+    command: python TaskC/HW_content/worker_2.py
+    environment:
+      DISTRIBUTOR_HOST: taskc-distributor
+
+  taskc-collector:
+    build: .
+    command: python TaskC/HW_content/tasks_collector_publisher.py
+    environment:
+      WORKER_1_HOST: taskc-worker-1
+      WORKER_2_HOST: taskc-worker-2
+    depends_on:
+      - taskc-worker-1
+      - taskc-worker-2
+
+  taskc-sum-subscriber:
+    build: .
+    command: python TaskC/HW_content/sum_subscriber.py
+    environment:
+      PUBLISHER_HOST: taskc-collector
+    depends_on:
+      - taskc-collector
+
+  taskc-mut-subscriber:
+    build: .
+    command: python TaskC/HW_content/mut_subscriber.py
+    environment:
+      PUBLISHER_HOST: taskc-collector
+    depends_on:
+      - taskc-collector
+
+  taskc-div-subscriber:
+    build: .
+    command: python TaskC/HW_content/div_subscriber.py
+    environment:
+      PUBLISHER_HOST: taskc-collector
+    depends_on:
+      - taskc-collector
+
+  taskc-distributor:
+    build: .
+    command: python TaskC/HW_content/tasks_distributor.py
+    environment:
+      DISTRIBUTOR_STARTUP_DELAY: "5"
+      TASK_INTERVAL_SECONDS: "1"
+    depends_on:
+      - taskc-worker-1
+      - taskc-worker-2
+      - taskc-sum-subscriber
+      - taskc-mut-subscriber
+      - taskc-div-subscriber
 
   # ---------- Task D: Reticulum Announcement ----------
   taskd:

@@ -1,38 +1,49 @@
-from data_worker import DataToWorker
-import main_constants as mc
-import zmq
-import time
-import random
+import os
 import pickle
+import random
+import time
 
-### Here's the step by step
-### Create your context 
-### Create 1 socket using the PUSH socket type
-### Bind your PUSH socket to your desired endpoint.
+import zmq
 
-###
-####   YOUR CODE
-###
+import main_constants as mc
+from data_worker import DataToWorker
 
-print(f"Tasks distributor is running on {...}")
-print("Sending tasks to workers")
-print("There are 3 available tasks")
-print("Sum; Multiply; Division")
 
-while True:
-    ### Generate 2 random numbers
-    ### set the appropriate value for the given variables
-    ## send the data
-    time.sleep(5)
-###
-####   YOUR CODE
-###
-    task_code = random.choice([..., ..., ...])
-    task_data = DataToWorker(..., ..., ...)
-    sent_task = pickle.dumps(...)
+def run_distributor():
+    context = zmq.Context()
+    socket = context.socket(zmq.PUSH)
+    socket.bind(f"tcp://*:{mc.DISTRIBUTOR_PORT}")
 
-    print(f"Sending task --- {...} ({...} & {...}) waiting for available worker to handle")
-###
-####   YOUR CODE
-###
-    print("--- Sent --- ")
+    total_tasks = int(os.getenv("DISTRIBUTOR_TOTAL_TASKS", "0"))
+    startup_delay = float(os.getenv("DISTRIBUTOR_STARTUP_DELAY", "2"))
+    task_interval = float(os.getenv("TASK_INTERVAL_SECONDS", "1"))
+    print(f"Tasks distributor is running on port {mc.DISTRIBUTOR_PORT}", flush=True)
+    print("Available tasks: SUM, MUT, DIV", flush=True)
+    time.sleep(startup_delay)
+
+    task_id = 0
+    operations = (mc.SUM, mc.MUT, mc.DIV)
+    try:
+        while total_tasks == 0 or task_id < total_tasks:
+            task_id += 1
+            num1 = random.randint(1, 100)
+            num2 = random.randint(1, 100)
+            operation = random.choice(operations)
+            task_data = DataToWorker(num1, num2, operation)
+            print(
+                f"[Distributor -> PUSH] Task #{task_id}: {operation.upper()} "
+                f"({num1}, {num2})",
+                flush=True,
+            )
+            socket.send(pickle.dumps(task_data))
+            print("--- Sent ---", flush=True)
+            time.sleep(task_interval)
+    except KeyboardInterrupt:
+        print("[Distributor] Stopped", flush=True)
+    finally:
+        socket.close(linger=0)
+        context.term()
+
+
+if __name__ == "__main__":
+    run_distributor()
