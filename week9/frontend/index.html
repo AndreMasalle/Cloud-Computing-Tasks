@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenLapak – E-Commerce Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EFF2EE; --surface:#FFFFFF; --ink:#16282A; --muted:#5C6E70; --line:#DCE3DE;
+  --teal:#0D5C55; --teal-d:#093F3A; --teal-l:#E1EFEC; --sun:#F4B73F; --danger:#B93A1B; --danger-l:#FBE9E3;
+  --bronze:#A8643A; --silver:#6F7F86; --gold:#B7791F;
+  --r:10px;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Public Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+/* Sidebar */
+aside{background:var(--teal-d);color:#D7E6E3;padding:28px 18px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:32px}
+.brand{font:700 26px/1 var(--display);color:#fff;padding:0 10px}
+.brand small{display:block;font:400 13px/1.4 var(--body);color:#93B4AF;margin-top:6px}
+nav{display:flex;flex-direction:column;gap:2px}
+nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:inherit;text-decoration:none;font-weight:500}
+nav a svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav a:hover{background:rgba(255,255,255,.07)}
+nav a[aria-current="page"]{background:var(--sun);color:#2A2000}
+.side-foot{margin-top:auto;font-size:13px;color:#93B4AF;padding:0 10px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7a8f8c;margin-right:8px}
+.dot.on{background:#5FD39A}
+
+main{padding:36px 40px 64px;max-width:1160px;width:100%;min-width:0}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.head h1{font-size:32px;line-height:1.1}
+.head p{margin:6px 0 0;color:var(--muted)}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+
+/* Controls */
+.btn{border:0;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer;background:var(--teal);color:#fff;transition:background .15s}
+.btn:hover{background:var(--teal-d)}
+.btn.ghost{background:transparent;color:var(--teal);border:1px solid var(--line);background:var(--surface)}
+.btn.ghost:hover{background:var(--teal-l)}
+.btn.danger{background:var(--danger)}
+.btn.danger:hover{background:#962d14}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn.link{background:none;color:var(--teal);padding:6px 8px;font-size:13px}
+.btn.link:hover{background:var(--teal-l)}
+.btn.link.del{color:var(--danger)}
+.btn.link.del:hover{background:var(--danger-l)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input,select{width:100%;padding:10px 12px;border:1px solid #C5D0CA;border-radius:8px;background:#fff}
+input:hover,select:hover{border-color:#9DB0A8}
+.search{width:240px}
+label{display:block;font-weight:600;font-size:14px;margin-bottom:12px}
+label span{display:block;margin-bottom:4px}
+label small{font-weight:400;color:var(--muted)}
+
+/* Panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px}
+.panel+.panel{margin-top:20px}
+.panel h2{font-size:19px;margin-bottom:14px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-weight:600;font-size:13px;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid #EDF1EE;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.act{text-align:right;white-space:nowrap}
+.who{display:flex;align-items:center;gap:10px;font-weight:500}
+.av{width:30px;height:30px;border-radius:50%;background:var(--teal-l);color:var(--teal);display:grid;place-items:center;font:700 12px var(--display);flex:none}
+.muted{color:var(--muted)}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid currentColor}
+.badge.Bronze{color:var(--bronze)} .badge.Silver{color:var(--silver)} .badge.Gold{color:var(--gold);background:#FFF6DD}
+.badge.low{color:var(--danger);background:var(--danger-l)}
+.badge.Platinum{position:relative;overflow:hidden;vertical-align:middle;color:#fff;border-color:#9DB4B8;padding-left:25px;letter-spacing:.03em;
+  background:linear-gradient(135deg,#0E2022,#2D4E52 55%,#0E2022);text-shadow:0 0 8px rgba(190,235,240,.55)}
+.badge.Platinum::before{content:"";position:absolute;left:10px;top:50%;width:8px;height:8px;margin-top:-4px;transform:rotate(45deg);
+  background:linear-gradient(135deg,#fff,#9FB8BC);box-shadow:0 0 6px rgba(190,235,240,.8)}
+.badge.Platinum::after{content:"";position:absolute;inset:0;transform:translateX(-120%);animation:shine 4s ease-in-out infinite;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%)}
+@keyframes shine{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+
+/* Hero (dashboard) */
+.hero{max-width:100%;background:var(--teal);color:#fff;border-radius:14px;padding:28px 32px 0;overflow:hidden;position:relative}
+.hero .lbl{color:#A9D1CB;font-weight:500}
+.hero .big{font:700 clamp(44px,7vw,76px)/1 var(--display);letter-spacing:-.03em;margin:6px 0 4px}
+.hero .big sup{font-size:.45em;vertical-align:.7em;margin-right:2px;color:var(--sun)}
+.hero .sub{color:#A9D1CB;font-size:14px}
+.spark{display:block;width:calc(100% + 64px);margin:14px -32px 0;height:110px}
+.spark .area{fill:rgba(244,183,63,.16)} .spark .line{fill:none;stroke:var(--sun);stroke-width:2.5;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.hero .nospark{padding:18px 0 28px;color:#A9D1CB}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);margin:20px 0}
+.fact{padding:0 20px;border-left:1px solid var(--line)}
+.fact:first-child{border-left:0;padding-left:0}
+.fact b{display:block;font:700 28px/1.2 var(--display)}
+.fact span{color:var(--muted);font-size:14px}
+.two{display:grid;grid-template-columns:1.6fr 1fr;gap:20px}
+.two .panel+.panel{margin-top:0}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #EDF1EE}
+.list li:last-child{border:0}
+
+/* Bars */
+.bars{display:grid;gap:16px}
+.bar-row .top{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;font-weight:500}
+.bar-row .top span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.track{height:10px;border-radius:99px;background:var(--teal-l);overflow:hidden}
+.track i{display:block;height:100%;background:var(--teal);border-radius:99px}
+.bar-row:first-child .track i{background:var(--sun)}
+.bar-row .meta{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* States */
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty h3{color:var(--ink);font-size:20px;margin-bottom:6px}
+.empty .btn{margin-top:16px}
+.skel{height:180px;border-radius:var(--r);background:linear-gradient(90deg,#E4EAE6,#F2F5F3,#E4EAE6);background-size:200% 100%;animation:sh 1.2s infinite linear}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* Dialog + toast */
+dialog{border:0;border-radius:14px;padding:0;width:min(440px,calc(100vw - 32px));box-shadow:0 24px 60px rgba(9,63,58,.35);color:var(--ink)}
+dialog::backdrop{background:rgba(9,40,38,.55)}
+dialog form{padding:26px}
+dialog h2{font-size:22px;margin-bottom:18px}
+dialog .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+dialog .foot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.err{color:var(--danger);font-size:14px;min-height:20px;margin:0 0 8px}
+.total{display:flex;justify-content:space-between;align-items:baseline;background:var(--teal-l);border-radius:8px;padding:12px 14px;margin-bottom:16px}
+.total b{font:700 24px var(--display)}
+#toasts{position:fixed;right:20px;bottom:20px;display:grid;gap:8px;z-index:99}
+.toast{background:var(--ink);color:#fff;padding:12px 16px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:in .2s ease-out}
+.toast.bad{background:var(--danger)}
+@keyframes in{from{transform:translateY(8px);opacity:0}}
+
+@media (max-width:900px){
+  body{grid-template-columns:minmax(0,1fr)}
+  aside{position:static;height:auto;flex-direction:row;align-items:center;gap:16px;padding:14px 16px;overflow-x:auto}
+  .brand small,.side-foot{display:none}
+  nav{flex-direction:row}
+  nav a{padding:8px 12px;white-space:nowrap}
+  main{padding:24px 16px 56px}
+  .facts{grid-template-columns:1fr 1fr;row-gap:18px}
+  .fact:nth-child(3){border-left:0;padding-left:0}
+  .two,.two[style]{grid-template-columns:minmax(0,1fr)!important}
+  .search{width:100%}
+  .tools{width:100%}
+  .head h1{font-size:28px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Charts */
+.charts{display:grid;gap:20px}
+.charts .panel+.panel{margin-top:0}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.panel .sub{margin:-8px 0 12px;color:var(--muted);font-size:14px}
+.chart{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font:12px var(--body);fill:var(--muted)}
+.chart .grid line{stroke:#E3E9E5;stroke-width:1}
+.chart .cat{fill:var(--ink);font-size:13px}
+.chart .val{fill:var(--ink);font-weight:600;font-size:13px}
+.chart .fill{fill:var(--teal);transition:fill .12s,filter .12s}
+.chart .bar:hover .fill{filter:brightness(.88)}
+.chart .bl{fill:#fff;font-weight:600;pointer-events:none;paint-order:stroke;stroke:rgba(0,0,0,.28);stroke-width:2.5px;stroke-linejoin:round}
+.chart .hl{opacity:0}
+.chart .pt:hover .hl{opacity:1}
+.chart .pt line.hl{stroke:#9DB0A8;stroke-width:1;stroke-dasharray:3 3}
+.donut{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.donut svg{width:180px;height:180px;flex:none}
+.donut .dv{font:700 18px var(--display);fill:var(--ink)}
+.donut .dl{font-size:12px}
+.donut .seg{transition:stroke-width .12s}
+.donut .seg:hover{stroke-width:30}
+.legend{list-style:none;margin:0;padding:0;flex:1;min-width:180px;display:grid;gap:10px}
+.legend li{display:grid;grid-template-columns:12px 1fr auto 40px;gap:8px;align-items:center}
+.legend i{width:12px;height:12px;border-radius:3px}
+.legend b{font-weight:600;font-variant-numeric:tabular-nums}
+.legend em{font-style:normal;color:var(--muted);text-align:right;font-size:13px}
+.tv{margin-top:12px;border-top:1px solid #EDF1EE;padding-top:10px}
+.tv summary{cursor:pointer;color:var(--teal);font-size:13px;font-weight:600;width:max-content}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;padding:8px 10px;border-radius:6px;font-size:13px;line-height:1.4;white-space:pre-line;z-index:100;display:none;max-width:260px}
+@media (max-width:900px){.cols2{grid-template-columns:minmax(0,1fr)}}
+.chart .grid line.v{stroke:#EEF2EF}
+.chart .bub .b{transition:fill-opacity .12s}
+.chart .bub:hover .b{fill-opacity:1}
+.keys{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:6px;font-size:13px}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.keys i{width:12px;height:12px;border-radius:50%}
+</style>
+</head>
+<body>
+<aside>
+  <div class="brand">OpenLapak<small>Analitik toko online</small></div>
+  <nav aria-label="Menu utama">
+    <a href="#/dashboard" data-r="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</a>
+    <a href="#/products" data-r="products"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg>Produk</a>
+    <a href="#/customers" data-r="customers"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.8c1.8.7 3 2.3 3.4 4.7"/></svg>Pelanggan</a>
+    <a href="#/orders" data-r="orders"><svg viewBox="0 0 24 24"><path d="M6 3h12l2 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7z"/><path d="M4 7h16M9 11a3 3 0 0 0 6 0"/></svg>Pesanan</a>
+    <a href="#/analytics" data-r="analytics"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Analitik</a>
+  </nav>
+  <div class="side-foot"><span class="dot" id="dot"></span><span id="status">Menghubungkan…</span></div>
+</aside>
+<main id="app" aria-live="polite"></main>
+<dialog id="dlg"></dialog>
+<div id="toasts" role="status"></div>
+<div id="tip"></div>
+
+<script>
+const API = "http://localhost:8000/api";
+const S = { products: [], customers: [], orders: [] };
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => "$" + Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const when = iso => new Date(iso + "Z").toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const initials = n => String(n).trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || "").join("");
+const LOW_STOCK = 5;
+
+async function api(path, opts = {}) {
+  let res;
+  const init = { ...opts };
+  if (init.body) init.headers = { "Content-Type": "application/json" };
+  try { res = await fetch(API + path, init); }
+  catch { setStatus(false); throw new Error("OFFLINE"); }
+  setStatus(true);
+  if (!res.ok) {
+    let msg = "";
+    try { const j = await res.json(); msg = typeof j.detail === "string" ? j.detail : "Data yang dikirim belum valid."; } catch {}
+    throw new Error(msg || `Permintaan gagal (${res.status}).`);
+  }
+  return res.json();
+}
+function setStatus(on) {
+  $("#dot").classList.toggle("on", on);
+  $("#status").textContent = on ? "Server terhubung" : "Server tidak terjangkau";
+}
+function toast(msg, bad) {
+  const t = document.createElement("div");
+  t.className = "toast" + (bad ? " bad" : ""); t.textContent = msg;
+  $("#toasts").append(t); setTimeout(() => t.remove(), 3200);
+}
+async function loadAll() {
+  [S.products, S.customers, S.orders] = await Promise.all([api("/products"), api("/customers"), api("/orders")]);
+}
+
+/* ---------- Dialog helpers ---------- */
+function openForm({ title, body, submit = "Simpan", danger = false, onSubmit }) {
+  const dlg = $("#dlg");
+  dlg.innerHTML = `<form method="dialog" novalidate><h2>${esc(title)}</h2>${body}
+    <p class="err" id="ferr"></p>
+    <div class="foot"><button type="button" class="btn ghost" data-close>Batal</button>
+    <button class="btn ${danger ? "danger" : ""}" id="fsub">${esc(submit)}</button></div></form>`;
+  dlg.querySelector("[data-close]").onclick = () => dlg.close();
+  dlg.querySelector("form").onsubmit = async e => {
+    e.preventDefault();
+    const btn = $("#fsub"); btn.disabled = true;
+    try { await onSubmit(new FormData(e.target)); dlg.close(); }
+    catch (err) { $("#ferr").textContent = err.message === "OFFLINE" ? "Server tidak terjangkau. Pastikan backend berjalan di localhost:8000." : err.message; btn.disabled = false; }
+  };
+  dlg.showModal();
+  dlg.querySelector("input,select")?.focus();
+}
+const confirmDel = (title, text, fn) => openForm({ title, danger: true, submit: "Hapus", body: `<p class="muted" style="margin:0 0 16px">${esc(text)}</p>`, onSubmit: fn });
+const need = (v, msg) => { if (!String(v).trim()) throw new Error(msg); };
+
+/* ---------- Pages ---------- */
+const pages = {};
+
+pages.dashboard = async () => {
+  const d = await api("/dashboard");
+  const sorted = [...S.orders].sort((a, b) => a.order_date.localeCompare(b.order_date));
+  let cum = 0; const pts = sorted.map(o => (cum += o.total_price));
+  let spark = `<div class="nospark">Grafik muncul setelah ada minimal 2 pesanan.</div>`;
+  if (pts.length >= 2) {
+    const W = 600, H = 110, max = pts[pts.length - 1] || 1;
+    const xy = pts.map((v, i) => [i / (pts.length - 1) * W, H - 8 - (v / max) * (H - 24)]);
+    const line = xy.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    spark = `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Pendapatan kumulatif per pesanan"><path class="area" d="${line} L${W} ${H} L0 ${H}Z"/><path class="line" d="${line}"/></svg>`;
+  }
+  const avg = d.total_orders ? d.total_revenue / d.total_orders : 0;
+  const low = [...S.products].filter(p => p.stock <= LOW_STOCK).sort((a, b) => a.stock - b.stock).slice(0, 6);
+  const empty = !d.total_products && !d.total_customers && !d.total_orders;
+  return `
+  <div class="head"><div><h1>Dashboard</h1><p>Ringkasan penjualan toko Anda.</p></div>
+    <div class="tools"><button class="btn ghost" data-act="seed">Isi data contoh</button></div></div>
+  <section class="hero">
+    <div class="lbl">Total pendapatan</div>
+    <div class="big"><sup>$</sup>${Number(d.total_revenue).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+    <div class="sub">${d.total_orders ? `dari ${d.total_orders} pesanan, rata-rata ${money(avg)} per pesanan` : "Belum ada pesanan masuk"}</div>
+    ${spark}
+  </section>
+  <div class="panel facts" style="margin-top:20px">
+    <div class="fact"><b>${d.total_orders}</b><span>Pesanan</span></div>
+    <div class="fact"><b>${d.total_customers}</b><span>Pelanggan</span></div>
+    <div class="fact"><b>${d.total_products}</b><span>Produk</span></div>
+    <div class="fact"><b>${money(avg)}</b><span>Rata-rata per pesanan</span></div>
+  </div>
+  ${empty ? `<div class="panel empty"><h3>Toko Anda masih kosong</h3><p>Tambahkan produk dan pelanggan, lalu buat pesanan pertama. Atau isi data contoh untuk mencoba.</p><button class="btn" data-act="seed">Isi data contoh</button></div>` : `
+  <div class="two">
+    <div class="panel"><h2>Pesanan terbaru</h2>${d.recent_orders.length ? `<div class="tbl"><table>
+      <tr><th>Pelanggan</th><th>Produk</th><th class="num">Total</th><th>Tanggal</th></tr>
+      ${d.recent_orders.map(o => `<tr><td>${esc(o.customer_name)}</td><td>${esc(o.product_name)}</td><td class="num">${money(o.total_price)}</td><td class="muted">${esc(o.order_date.slice(0, 10))}</td></tr>`).join("")}
+    </table></div>` : `<p class="muted">Belum ada pesanan.</p>`}</div>
+    <div class="panel"><h2>Stok menipis</h2>${low.length ? `<ul class="list">${low.map(p => `<li><span>${esc(p.name)}</span><span class="badge low">${p.stock} tersisa</span></li>`).join("")}</ul>` : `<p class="muted">Semua stok aman (di atas ${LOW_STOCK}).</p>`}</div>
+  </div>`}`;
+};
+
+const searchBox = (ph, v = "") => `<input class="search" type="search" id="q" placeholder="${ph}" value="${esc(v)}" aria-label="${ph}">`;
+let Q = { products: "", customers: "", orders: "" };
+
+pages.products = () => {
+  const q = Q.products.toLowerCase();
+  const rows = S.products.filter(p => (p.name + p.category).toLowerCase().includes(q));
+  return `
+  <div class="head"><div><h1>Produk</h1><p>${S.products.length} produk di katalog.</p></div>
+    <div class="tools">${searchBox("Cari nama atau kategori", Q.products)}<button class="btn" data-act="add-product">Tambah produk</button></div></div>
+  <div class="panel">${rows.length ? `<div class="tbl"><table>
+    <tr><th>Nama</th><th>Kategori</th><th class="num">Harga</th><th class="num">Stok</th><th></th></tr>
+    ${rows.map(p => `<tr><td><b style="font-weight:500">${esc(p.name)}</b></td><td class="muted">${esc(p.category)}</td>
+      <td class="num">${money(p.price)}</td>
+      <td class="num">${p.stock <= LOW_STOCK ? `<span class="badge low">${p.stock}</span>` : p.stock}</td>
+      <td class="act"><button class="btn link" data-act="edit-product" data-id="${esc(p.id)}">Ubah</button><button class="btn link del" data-act="del-product" data-id="${esc(p.id)}">Hapus</button></td></tr>`).join("")}
+  </table></div>` : emptyState(S.products.length, "produk", "Tambah produk pertama", "add-product")}</div>`;
+};
+
+pages.customers = () => {
+  const q = Q.customers.toLowerCase();
+  const rows = S.customers.filter(c => (c.name + c.email).toLowerCase().includes(q));
+  return `
+  <div class="head"><div><h1>Pelanggan</h1><p>${S.customers.length} pelanggan terdaftar.</p></div>
+    <div class="tools">${searchBox("Cari nama atau email", Q.customers)}<button class="btn" data-act="add-customer">Tambah pelanggan</button></div></div>
+  <div class="panel">${rows.length ? `<div class="tbl"><table>
+    <tr><th>Nama</th><th>Email</th><th>Membership</th><th></th></tr>
+    ${rows.map(c => `<tr><td><div class="who"><span class="av">${esc(initials(c.name))}</span>${esc(c.name)}</div></td><td class="muted">${esc(c.email)}</td>
+      <td><span class="badge ${esc(c.tier)}">${esc(c.tier)}</span></td>
+      <td class="act"><button class="btn link" data-act="edit-customer" data-id="${esc(c.id)}">Ubah</button><button class="btn link del" data-act="del-customer" data-id="${esc(c.id)}">Hapus</button></td></tr>`).join("")}
+  </table></div>` : emptyState(S.customers.length, "pelanggan", "Tambah pelanggan pertama", "add-customer")}</div>`;
+};
+
+pages.orders = () => {
+  const q = Q.orders.toLowerCase();
+  const rows = [...S.orders].sort((a, b) => b.order_date.localeCompare(a.order_date)).filter(o => (o.customer_name + o.product_name).toLowerCase().includes(q));
+  return `
+  <div class="head"><div><h1>Pesanan</h1><p>${S.orders.length} pesanan tercatat.</p></div>
+    <div class="tools">${searchBox("Cari pelanggan atau produk", Q.orders)}<button class="btn" data-act="add-order">Buat pesanan</button></div></div>
+  <div class="panel">${rows.length ? `<div class="tbl"><table>
+    <tr><th>Tanggal</th><th>Pelanggan</th><th>Produk</th><th class="num">Qty</th><th class="num">Total</th><th></th></tr>
+    ${rows.map(o => `<tr><td class="muted">${esc(when(o.order_date))}</td><td>${esc(o.customer_name)}</td><td>${esc(o.product_name)}</td>
+      <td class="num">${o.quantity}</td><td class="num"><b style="font-weight:600">${money(o.total_price)}</b></td>
+      <td class="act"><button class="btn link" data-act="edit-order" data-id="${esc(o.id)}">Ubah</button><button class="btn link del" data-act="del-order" data-id="${esc(o.id)}">Hapus</button></td></tr>`).join("")}
+  </table></div>` : emptyState(S.orders.length, "pesanan", "Buat pesanan pertama", "add-order")}</div>`;
+};
+
+function emptyState(total, noun, cta, act) {
+  return total
+    ? `<div class="empty"><h3>Tidak ada hasil</h3><p>Coba kata kunci lain.</p></div>`
+    : `<div class="empty"><h3>Belum ada ${noun}</h3><p>Mulai dengan menambahkan data pertama.</p><button class="btn" data-act="${act}">${cta}</button></div>`;
+}
+
+/* ---------- Charts ---------- */
+const CAT_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]; // validated categorical slots 1-4
+const OTHER_COLOR = "#98A6A2";
+const TIERS = ["Bronze", "Silver", "Gold", "Platinum"];
+const TIER_COLORS = { Bronze: "#A8643A", Silver: "#6F7F86", Gold: "#B7791F", Platinum: "#2D4E52" };
+const CUST_COLOR = "#7b61c9";
+const niceStep = x => { const p = Math.pow(10, Math.floor(Math.log10(x))), f = x / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; };
+function yTicks(max, n = 4) {
+  if (!(max > 0)) return [0, 1];
+  const st = niceStep(max / n), out = [];
+  for (let v = 0; ; v += st) { out.push(+v.toFixed(6)); if (v >= max) break; }
+  return out;
+}
+const axisMoney = v => "$" + (Math.abs(v) >= 1000 ? +(v / 1000).toFixed(1) + "k" : +v.toFixed(2));
+const trunc = (s, n) => (String(s).length > n ? String(s).slice(0, n - 1) + "…" : String(s));
+const rrRight = (x, y, w, h, r) => (r = Math.min(r, w, h / 2), `M${x} ${y}h${w - r}a${r} ${r} 0 0 1 ${r} ${r}v${h - 2 * r}a${r} ${r} 0 0 1 ${-r} ${r}h${-(w - r)}z`);
+const rrTop = (x, y, w, h, r) => (r = Math.min(r, h, w / 2), `M${x} ${y + h}v${-(h - r)}a${r} ${r} 0 0 1 ${r} ${-r}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v${h - r}z`);
+
+function chartW(cols = 1) {
+  const aw = ($("#app").clientWidth || 900) - (innerWidth > 900 ? 80 : 32), gap = cols > 1 && innerWidth > 900 ? 20 : 0;
+  return Math.max(280, Math.min(760, Math.floor((aw - gap * (cols - 1)) / cols - 50)));
+}
+
+function lineChart(W) {
+  const o = [...S.orders].sort((a, b) => a.order_date.localeCompare(b.order_date));
+  let cum = 0;
+  const pts = o.map((x, i) => ({ i, v: (cum += x.total_price), o: x }));
+  const H = 260, L = 50, R = 14, T = 14, B = 34, iw = W - L - R, ih = H - T - B;
+  const ticks = yTicks(cum), ymax = ticks[ticks.length - 1];
+  const X = i => (pts.length === 1 ? L + iw / 2 : L + (i / (pts.length - 1)) * iw);
+  const Y = v => +(T + ih - (v / ymax) * ih).toFixed(1);
+  const line = pts.map((p, k) => (k ? "L" : "M") + X(p.i).toFixed(1) + " " + Y(p.v)).join(" ");
+  const step = Math.ceil(pts.length / Math.max(2, Math.floor(iw / 46))), slot = pts.length === 1 ? iw : iw / (pts.length - 1);
+  const last = pts[pts.length - 1];
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pendapatan kumulatif per pesanan, total ${money(cum)}">
+    <g class="grid">${ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${L - 8}" y="${Y(t) + 4}" text-anchor="end">${axisMoney(t)}</text>`).join("")}</g>
+    <path d="${line} L${X(last.i)} ${T + ih} L${X(0)} ${T + ih}Z" fill="rgba(13,92,85,.10)"/>
+    <path d="${line}" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map(p => (p.i % step ? "" : `<text class="xl" x="${X(p.i)}" y="${H - 10}" text-anchor="middle">#${p.i + 1}</text>`)).join("")}
+    <circle cx="${X(last.i)}" cy="${Y(last.v)}" r="4" fill="var(--teal)" stroke="#fff" stroke-width="2"/>
+    ${pts.map(p => `<g class="pt" data-tip="${esc(`Pesanan #${p.i + 1}: ${p.o.customer_name}\n${p.o.product_name} x ${p.o.quantity}\nTotal sejauh ini ${money(p.v)}`)}">
+      <rect x="${X(p.i) - slot / 2}" y="${T}" width="${slot}" height="${ih}" fill="transparent"/>
+      <line class="hl" x1="${X(p.i)}" x2="${X(p.i)}" y1="${T}" y2="${T + ih}"/>
+      <circle class="hl" cx="${X(p.i)}" cy="${Y(p.v)}" r="5" fill="var(--teal)" stroke="#fff" stroke-width="2"/></g>`).join("")}
+  </svg>`;
+}
+
+function hbar(items, W, fmt = money) {
+  const rowH = 46, T = 2, B = 24, H = T + items.length * rowH + B;
+  const ticks = yTicks(Math.max(...items.map(i => i.value), 0)), xm = ticks[ticks.length - 1];
+  const X = v => +((v / xm) * W).toFixed(1), maxCh = Math.floor((W - 80) / 7.5);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagram batang">
+    <g class="grid">${ticks.map(t => `<line x1="${X(t)}" x2="${X(t)}" y1="${T}" y2="${H - B}"/><text x="${X(t)}" y="${H - 8}" text-anchor="${t === 0 ? "start" : t === xm ? "end" : "middle"}">${axisMoney(t)}</text>`).join("")}</g>
+    ${items.map((it, i) => { const y = T + i * rowH;
+      return `<g class="bar" data-tip="${esc(it.tip)}"><rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
+        <text x="0" y="${y + 14}" class="cat">${esc(trunc(it.label, maxCh))}</text>
+        <text class="val" x="${W}" y="${y + 14}" text-anchor="end">${fmt(it.value)}</text>
+        <path class="fill" style="fill:${it.color || 'var(--teal)'}" d="${rrRight(0, y + 22, Math.max(X(it.value), 2), 12, 4)}"/></g>`; }).join("")}
+  </svg>`;
+}
+
+function vbar(items, W) {
+  const H = 250, L = 50, R = 8, T = 24, B = 34, iw = W - L - R, ih = H - T - B;
+  const ticks = yTicks(Math.max(...items.map(i => i.value), 0)), ym = ticks[ticks.length - 1];
+  const Y = v => +(T + ih - (v / ym) * ih).toFixed(1);
+  const slot = iw / items.length, bw = Math.min(64, slot * 0.55);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagram kolom">
+    <g class="grid">${ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${L - 8}" y="${Y(t) + 4}" text-anchor="end">${axisMoney(t)}</text>`).join("")}</g>
+    ${items.map((it, i) => { const cx = L + slot * i + slot / 2, h = ih - (Y(it.value) - T);
+      return `<g class="bar" data-tip="${esc(it.tip)}"><rect x="${cx - slot / 2}" y="${T}" width="${slot}" height="${ih}" fill="transparent"/>
+        ${h > 0 ? `<path class="fill" style="fill:${it.color || 'var(--teal)'}" d="${rrTop(cx - bw / 2, Y(it.value), bw, h, 4)}"/>` : ""}
+        <text class="val" x="${cx}" y="${Y(it.value) - 7}" text-anchor="middle">${money(it.value)}</text>
+        <text x="${cx}" y="${H - 10}" text-anchor="middle" class="cat">${esc(it.label)}</text></g>`; }).join("")}
+  </svg>`;
+}
+
+function donut(items) {
+  const total = items.reduce((s, i) => s + i.value, 0), R = 62, C = 2 * Math.PI * R;
+  let acc = 0;
+  const arcs = items.map(it => {
+    const len = (it.value / total) * C, gap = items.length > 1 ? 2 : 0;
+    const el = `<circle class="seg" cx="90" cy="90" r="${R}" fill="none" stroke="${it.color}" stroke-width="26" stroke-dasharray="${Math.max(len - gap, 0.1)} ${C}" stroke-dashoffset="${-(acc + gap / 2)}" transform="rotate(-90 90 90)" data-tip="${esc(it.tip)}"/>`;
+    acc += len; return el;
+  }).join("");
+  return `<div class="donut"><svg viewBox="0 0 180 180" role="img" aria-label="Diagram donat, total ${money(total)}">${arcs}
+    <text x="90" y="88" text-anchor="middle" class="dv">${money(total)}</text><text x="90" y="106" text-anchor="middle" class="dl">total</text></svg>
+    <ul class="legend">${items.map(it => `<li><i style="background:${it.color}"></i><span>${esc(it.label)}</span><b>${money(it.value)}</b><em>${Math.round((it.value / total) * 100)}%</em></li>`).join("")}</ul></div>`;
+}
+
+function bubbleChart(items, W, colorOf) {
+  const H = 380, L = 56, R = 16, T = 16, B = 46, iw = W - L - R, ih = H - T - B, padX = 52, padY = 52;
+  const xt = yTicks(Math.max(...items.map(i => i.price), 1)), yt = yTicks(Math.max(...items.map(i => i.sold), 1));
+  const xm = xt[xt.length - 1], ym = yt[yt.length - 1], maxRev = Math.max(...items.map(i => i.rev), 1);
+  const X = v => +(L + padX + (v / xm) * (iw - 2 * padX)).toFixed(1), Y = v => +(T + ih - padY - (v / ym) * (ih - 2 * padY)).toFixed(1);
+  const rad = i => (i.rev > 0 ? 26 + 22 * Math.sqrt(i.rev / maxRev) : 5);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagram gelembung: harga produk, jumlah terjual, dan pendapatan">
+    <g class="grid">${yt.map(t => `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${L - 8}" y="${Y(t) + 4}" text-anchor="end">${t}</text>`).join("")}
+    ${xt.map(t => `<line class="v" x1="${X(t)}" x2="${X(t)}" y1="${T}" y2="${T + ih}"/><text x="${X(t)}" y="${T + ih + 16}" text-anchor="middle">${axisMoney(t)}</text>`).join("")}</g>
+    <text x="${L + iw / 2}" y="${H - 6}" text-anchor="middle">Harga satuan</text>
+    <text transform="translate(12 ${T + ih / 2}) rotate(-90)" text-anchor="middle">Item terjual</text>
+    ${[...items].sort((a, b) => b.rev - a.rev).map(it => {
+      const x = X(it.price), y = Y(it.sold), r = rad(it);
+      const words = String(it.name).trim().split(/\s+/).slice(0, 2).map(w => trunc(w, 11));
+      const fs = Math.max(9, Math.min(13, Math.round(r * 0.3)));
+      const label = it.rev > 0
+        ? `<text class="bl" text-anchor="middle" style="font-size:${fs}px">${words.map((w, k) => `<tspan x="${x}" y="${(y + (k - (words.length - 1) / 2) * (fs + 2) + fs * 0.35).toFixed(1)}">${esc(w)}</tspan>`).join("")}</text>`
+        : "";
+      return `<g class="bub" data-tip="${esc(`${it.name}\n${it.cat}\nHarga ${money(it.price)}\nTerjual ${it.sold} item\nPendapatan ${money(it.rev)}`)}">
+        <circle class="b" cx="${x}" cy="${y}" r="${r}" fill="${colorOf(it.cat)}" fill-opacity="${it.rev > 0 ? .85 : .35}" stroke="#fff" stroke-width="2"/>${label}</g>`;
+    }).join("")}
+  </svg>`;
+}
+
+const tableView = (head, rows) => `<details class="tv"><summary>Lihat sebagai tabel</summary><div class="tbl"><table>
+  <tr>${head.map((h, i) => `<th${i ? ' class="num"' : ""}>${esc(h)}</th>`).join("")}</tr>
+  ${rows.map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></details>`;
+const chartPanel = (title, sub, body, tv = "") => `<div class="panel"><h2>${esc(title)}</h2><p class="sub">${esc(sub)}</p>${body}${tv}</div>`;
+
+pages.analytics = async () => {
+  const [tc, tp] = await Promise.all([api("/analytics/top-customers"), api("/analytics/top-products")]);
+  const head = `<div class="head"><div><h1>Analitik</h1><p>Grafik penjualan dari data pesanan, produk, dan pelanggan.</p></div></div>`;
+  if (!S.orders.length) return head + `<div class="panel empty"><h3>Belum ada pesanan untuk dianalisis</h3><p>Grafik muncul setelah pesanan pertama dibuat.</p><a class="btn" href="#/orders" style="display:inline-block;text-decoration:none">Buat pesanan</a></div>`;
+
+  const total = S.orders.reduce((s, o) => s + o.total_price, 0);
+  const cs = tc.slice(0, 5).map(c => ({ label: c.customer_name, value: c.total_spent, color: CUST_COLOR, tip: `${c.customer_name}\nTotal belanja ${money(c.total_spent)}` }));
+
+  const pm = Object.fromEntries(S.products.map(p => [p.id, p])), cm = Object.fromEntries(S.customers.map(c => [c.id, c]));
+  const byCat = {}, byTier = Object.fromEntries(TIERS.map(t => [t, 0]));
+  S.orders.forEach(o => {
+    const cat = pm[o.product_id]?.category || "Produk terhapus";
+    byCat[cat] = (byCat[cat] || 0) + o.total_price;
+    const t = cm[o.customer_id]?.tier; if (t in byTier) byTier[t] += o.total_price;
+  });
+  let cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const keep = cats.slice(0, 4), rest = cats.slice(4).reduce((s, c) => s + c[1], 0);
+  const catItems = keep.map(([label, value], i) => ({ label, value, color: CAT_COLORS[i], tip: `${label}\n${money(value)} (${Math.round(value / total * 100)}%)` }));
+  if (rest > 0) catItems.push({ label: "Lainnya", value: rest, color: OTHER_COLOR, tip: `Lainnya\n${money(rest)}` });
+  const colorOf = cat => catItems.find(c => c.label === cat)?.color || OTHER_COLOR;
+  const ps = tp.slice(0, 5).map(p => { const cat = pm[p.product_id]?.category; return { label: p.product_name, value: p.total_revenue, color: colorOf(cat), cat, tip: `${p.product_name}\n${cat || "Produk terhapus"}\n${p.items_sold} item terjual\nPendapatan ${money(p.total_revenue)}` }; });
+  const psKeys = [...new Map(ps.map(p => [p.color, p.color === OTHER_COLOR ? "Lainnya" : p.cat])).entries()].map(([c, l]) => `<span><i style="background:${c}"></i>${esc(l)}</span>`).join("");
+  const agg = {}; S.orders.forEach(o => { const a = agg[o.product_id] ||= { rev: 0, sold: 0 }; a.rev += o.total_price; a.sold += o.quantity; });
+  const bub = S.products.map(p => ({ name: p.name, cat: p.category, price: p.price, sold: agg[p.id]?.sold || 0, rev: agg[p.id]?.rev || 0 }));
+  const keys = [...new Map(bub.map(b => [colorOf(b.cat), colorOf(b.cat) === OTHER_COLOR ? "Lainnya" : b.cat])).entries()].map(([c, l]) => `<span><i style="background:${c}"></i>${esc(l)}</span>`).join("");
+  const tierItems = TIERS.map(t => ({ label: t, value: byTier[t], color: TIER_COLORS[t], tip: `${t}\nPendapatan ${money(byTier[t])}` }));
+
+  return head + `<div class="charts">
+    ${chartPanel("Tren pendapatan", "Pendapatan kumulatif, pesanan demi pesanan.", lineChart(chartW(1)), tableView(["Pesanan", "Pelanggan", "Total"], [...S.orders].sort((a, b) => a.order_date.localeCompare(b.order_date)).map((o, i) => [`#${i + 1}`, o.customer_name, money(o.total_price)])))}
+    ${S.products.length ? chartPanel("Harga vs penjualan produk", "Ukuran gelembung menunjukkan pendapatan, warna menunjukkan kategori. Titik kecil di dasar berarti produk belum terjual. Arahkan kursor untuk detail.", bubbleChart(bub, chartW(1), colorOf) + `<div class="keys">${keys}</div>`, tableView(["Produk", "Kategori", "Harga", "Terjual", "Pendapatan"], [...bub].sort((a, b) => b.rev - a.rev).map(b => [b.name, b.cat, money(b.price), b.sold + " item", money(b.rev)]))) : ""}
+    <div class="cols2">
+      ${chartPanel("5 pelanggan teratas", "Berdasarkan total belanja.", hbar(cs, chartW(2)), tableView(["Pelanggan", "Total belanja"], cs.map(c => [c.label, money(c.value)])))}
+      ${chartPanel("5 produk terlaris", "Berdasarkan pendapatan, warna mengikuti kategori.", hbar(ps, chartW(2)) + `<div class="keys">${psKeys}</div>`, tableView(["Produk", "Pendapatan"], ps.map(p => [p.label, money(p.value)])))}
+    </div>
+    <div class="cols2">
+      ${chartPanel("Pendapatan per kategori", "Gabungan data pesanan dan produk.", donut(catItems), tableView(["Kategori", "Pendapatan"], catItems.map(c => [c.label, money(c.value)])))}
+      ${chartPanel("Pendapatan per membership", "Gabungan data pesanan dan pelanggan.", vbar(tierItems, chartW(2)), tableView(["Membership", "Pendapatan"], tierItems.map(t => [t.label, money(t.value)])))}
+    </div></div>`;
+};
+
+/* ---------- Router ---------- */
+let current = "dashboard";
+async function route() {
+  current = (location.hash.replace("#/", "") || "dashboard");
+  if (!pages[current]) current = "dashboard";
+  document.querySelectorAll("nav a").forEach(a => a.dataset.r === current ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  await render(true);
+}
+async function render(skeleton) {
+  const app = $("#app");
+  if (skeleton) app.innerHTML = `<div class="skel"></div>`;
+  try {
+    await loadAll();
+    app.innerHTML = await pages[current]();
+  } catch (e) {
+    app.innerHTML = e.message === "OFFLINE"
+      ? `<div class="panel empty"><h3>Server tidak terjangkau</h3><p>Jalankan backend FastAPI di <b>localhost:8000</b>, lalu coba lagi.</p><button class="btn" data-act="retry">Coba lagi</button></div>`
+      : `<div class="panel empty"><h3>Data gagal dimuat</h3><p>${esc(e.message)}</p><button class="btn" data-act="retry">Coba lagi</button></div>`;
+  }
+}
+
+/* ---------- Actions ---------- */
+const post = (p, b) => api(p, { method: "POST", body: JSON.stringify(b) });
+const put = (p, b) => api(p, { method: "PUT", body: JSON.stringify(b) });
+const del = p => api(p, { method: "DELETE" });
+const done = async msg => { toast(msg); await render(false); };
+
+function productForm(p) {
+  const e = !!p;
+  openForm({
+    title: e ? "Ubah produk" : "Tambah produk", submit: "Simpan produk",
+    body: `<label><span>Nama produk</span><input name="name" value="${esc(p?.name)}" required></label>
+      <label><span>Kategori</span><input name="category" value="${esc(p?.category)}" required></label>
+      <div class="row"><label><span>Harga ($)</span><input name="price" type="number" min="0" step="0.01" value="${esc(p?.price)}" required></label>
+      <label><span>Stok</span><input name="stock" type="number" min="0" step="1" value="${esc(p?.stock)}" required></label></div>`,
+    onSubmit: async f => {
+      need(f.get("name"), "Nama produk wajib diisi."); need(f.get("category"), "Kategori wajib diisi.");
+      const price = parseFloat(f.get("price")), stock = parseInt(f.get("stock"), 10);
+      if (!(price >= 0)) throw new Error("Harga harus berupa angka 0 atau lebih.");
+      if (!(stock >= 0)) throw new Error("Stok harus berupa angka 0 atau lebih.");
+      const body = { name: f.get("name").trim(), category: f.get("category").trim(), price, stock };
+      e ? await put("/products/" + p.id, body) : await post("/products", body);
+      await done(e ? "Produk diperbarui" : "Produk ditambahkan");
+    }
+  });
+}
+function customerForm(c) {
+  const e = !!c;
+  openForm({
+    title: e ? "Ubah pelanggan" : "Tambah pelanggan", submit: "Simpan pelanggan",
+    body: `<label><span>Nama pelanggan</span><input name="name" value="${esc(c?.name)}" required></label>
+      <label><span>Email</span><input name="email" type="email" value="${esc(c?.email)}" required></label>
+      <label><span>Membership</span><select name="tier">${["Bronze", "Silver", "Gold", "Platinum"].map(t => `<option ${c?.tier === t ? "selected" : ""}>${t}</option>`).join("")}</select></label>`,
+    onSubmit: async f => {
+      need(f.get("name"), "Nama pelanggan wajib diisi.");
+      if (!/^\S+@\S+\.\S+$/.test(f.get("email"))) throw new Error("Masukkan alamat email yang valid.");
+      const body = { name: f.get("name").trim(), email: f.get("email").trim(), tier: f.get("tier") };
+      e ? await put("/customers/" + c.id, body) : await post("/customers", body);
+      await done(e ? "Pelanggan diperbarui" : "Pelanggan ditambahkan");
+    }
+  });
+}
+function orderForm(o) {
+  const e = !!o;
+  if (!S.customers.length || !S.products.length) {
+    return openForm({ title: "Belum bisa membuat pesanan", submit: "Mengerti", onSubmit: async () => {},
+      body: `<p class="muted" style="margin:0 0 16px">Pesanan memerlukan minimal satu pelanggan dan satu produk. Tambahkan datanya terlebih dahulu.</p>` });
+  }
+  if (e && (!S.customers.some(c => c.id === o.customer_id) || !S.products.some(p => p.id === o.product_id)))
+    return toast("Pelanggan atau produk pada pesanan ini sudah dihapus, jadi pesanan tidak bisa diubah.", true);
+  openForm({
+    title: e ? "Ubah pesanan" : "Buat pesanan", submit: e ? "Simpan pesanan" : "Buat pesanan",
+    body: `<label><span>Pelanggan</span><select name="c">${S.customers.map(c => `<option value="${esc(c.id)}" ${e && c.id === o.customer_id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+      <label><span>Produk</span><select name="p" id="op">${S.products.map(p => `<option value="${esc(p.id)}" ${e && p.id === o.product_id ? "selected" : ""}>${esc(p.name)} (${money(p.price)})</option>`).join("")}</select></label>
+      <label><span>Jumlah</span><input name="q" id="oq" type="number" min="1" step="1" value="${e ? esc(o.quantity) : 1}" required></label>
+      <div class="total"><span class="muted">Total</span><b id="ot">$0.00</b></div>`,
+    onSubmit: async f => {
+      const q = parseInt(f.get("q"), 10);
+      if (!(q >= 1)) throw new Error("Jumlah minimal 1.");
+      const body = { customer_id: f.get("c"), product_id: f.get("p"), quantity: q };
+      e ? await put("/orders/" + o.id, body) : await post("/orders", body);
+      await done(e ? "Pesanan diperbarui" : "Pesanan dibuat");
+    }
+  });
+  const calc = () => { const p = S.products.find(x => x.id === $("#op").value); $("#ot").textContent = money((p?.price || 0) * (parseInt($("#oq").value, 10) || 0)); };
+  $("#op").onchange = calc; $("#oq").oninput = calc; calc();
+}
+
+async function seed() {
+  try {
+    const P = [["Kopi Arabika Gayo 250g", "Minuman", 9.5, 40], ["Teko Keramik Handmade", "Perabot", 24, 12], ["Tumbler Stainless 500ml", "Perabot", 15.75, 4], ["Teh Melati Premium", "Minuman", 6.25, 60], ["Gilingan Kopi Manual", "Peralatan", 32, 3]];
+    const C = [["Adrian Maulana", "bangmega@mail.id", "Silver"], ["Muhammad Rizki Anshari", "rizkivoker@mail.id", "Platinum"], ["Andre Fransiscus Masalle", "masxebec@mail.id", "Bronze"], ["Muhammad Dhafa Ramadhani", "presidenri@mail.id", "Gold"]];
+    const ps = await Promise.all(P.map(([name, category, price, stock]) => post("/products", { name, category, price, stock })));
+    const cs = await Promise.all(C.map(([name, email, tier]) => post("/customers", { name, email, tier })));
+    // [indeks pelanggan, indeks produk, jumlah], urutan sesuai tabel (terbaru di atas)
+    const O = [[3, 3, 4], [2, 1, 1], [1, 4, 1], [3, 2, 2], [1, 0, 10], [3, 3, 6], [1, 1, 2], [0, 4, 1], [0, 0, 3]];
+    for (const [c, p, q] of [...O].reverse()) await post("/orders", { customer_id: cs[c].id, product_id: ps[p].id, quantity: q });
+    await done("Data contoh ditambahkan");
+  } catch (e) { toast(e.message === "OFFLINE" ? "Server tidak terjangkau. Jalankan backend dulu." : e.message, true); }
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act;
+  const prod = S.products.find(x => x.id === id), cust = S.customers.find(x => x.id === id), ord = S.orders.find(x => x.id === id);
+  if (act === "retry") render(true);
+  else if (act === "seed") seed();
+  else if (act === "add-product") productForm();
+  else if (act === "edit-product") productForm(prod);
+  else if (act === "del-product") confirmDel("Hapus produk?", `“${prod?.name}” akan dihapus dari katalog. Pesanan lama tetap tersimpan.`, async () => { await del("/products/" + id); await done("Produk dihapus"); });
+  else if (act === "add-customer") customerForm();
+  else if (act === "edit-customer") customerForm(cust);
+  else if (act === "del-customer") confirmDel("Hapus pelanggan?", `“${cust?.name}” akan dihapus. Pesanan lama tetap tersimpan.`, async () => { await del("/customers/" + id); await done("Pelanggan dihapus"); });
+  else if (act === "add-order") orderForm();
+  else if (act === "edit-order") orderForm(ord);
+  else if (act === "del-order") confirmDel("Hapus pesanan?", `Pesanan ${ord?.customer_name} untuk ${ord?.product_name} (${money(ord?.total_price)}) akan dihapus.`, async () => { await del("/orders/" + id); await done("Pesanan dihapus"); });
+});
+
+document.addEventListener("input", e => {
+  if (e.target.id !== "q") return;
+  Q[current] = e.target.value;
+  const pos = e.target.selectionStart;
+  $("#app").innerHTML = pages[current]();
+  const n = $("#q"); n.focus(); n.setSelectionRange(pos, pos);
+});
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest?.("[data-tip]"), tip = $("#tip");
+  if (!t) { tip.style.display = "none"; return; }
+  tip.textContent = t.dataset.tip; tip.style.display = "block";
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + "px";
+  tip.style.top = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8) + "px";
+});
+
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
